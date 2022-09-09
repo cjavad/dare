@@ -37,6 +37,6 @@ We allow the use of multiple types of characters for the different operations to
 
 ## License
 
-As stated in LICENSE, this project is duallicensed under the MIT license or the Apache 2.0 license as seen in LICENSE.
+As stated in LICENSE, this project is dual-licensed under the MIT license or the Apache 2.0 license as seen in LICENSE.
 
-Copyright (C) 2022 Contributers as seen in CONTRIBUTERS.md
+Copyright (C) 2022 Contributors as seen in CONTRIBUTORS.md

@@ -1,4 +1,5 @@
 # Contributors
+
 * Javad Asgari Shafique
 * Hjalte Cornelius Nannestad
 * Mads Christian Wrang Nielsen
