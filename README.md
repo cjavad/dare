@@ -35,7 +35,7 @@ A logical expression is a string of characters that can be parsed into a tableau
 From [https://en.wikipedia.org/wiki/List_of_logic_symbols](https://en.wikipedia.org/wiki/List_of_logic_symbols) and listed in order of precedence of symbols for individual characters and listed in order of precedence of operations:
 
 - (1) Parentheses (Seperates subexpressions)
-  - `(`, `)`
+  - ``(, )``
 - (2) Implication (IF THEN)
   - `→`, `->`, `⇒`, `⊃`
 - (3) Equivalence (IF AND ONLY IF)
@@ -90,14 +90,14 @@ We allow the use of multiple types of characters for the different operations to
 
 ### Negation
 
-| A | (`¬A`) |
+| A | `(¬A)` |
 | - | ------ |
 | T | F      |
 | F | T      |
 
 ### Conjunction
 
-| A | B | (`A ∧ B`) |
+| A | B | `(A ∧ B)` |
 | - | - | --------- |
 | T | T | T         |
 | T | F | F         |
@@ -106,7 +106,7 @@ We allow the use of multiple types of characters for the different operations to
 
 ### Disjunction
 
-| A | B | (`A ∨ B`) |
+| A | B | `(A ∨ B)` |
 | - | - | --------- |
 | T | T | T         |
 | T | F | T         |
@@ -115,7 +115,7 @@ We allow the use of multiple types of characters for the different operations to
 
 ### Exclusive Disjunction
 
-| A | B | (`A ⊕ B`) |
+| A | B | `(A ⊕ B)` |
 | - | - | ---------- |
 | T | T | F          |
 | T | F | T          |
@@ -124,14 +124,14 @@ We allow the use of multiple types of characters for the different operations to
 
 ### Tautology
 
-| A | (`T`) |
+| A | `(T)` |
 | - | ----- |
 | T | T     |
 | F | T     |
 
 ### Contradiction
 
-| A | (`F`) |
+| A | `(F)` |
 | - | ----- |
 | T | F     |
 | F | F     |
