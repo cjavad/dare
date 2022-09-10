@@ -22,7 +22,7 @@ pub struct Error {
 impl Error {
     /// Creates a new empty [`Error`].
     ///
-    /// See [`Self::wth_msg`] and [`Self::with_span`].
+    /// See [`Self::with_msg`] and [`Self::with_span`].
     pub const fn new() -> Self {
         Self {
             messages: Vec::new(),
