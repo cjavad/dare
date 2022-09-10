@@ -169,3 +169,44 @@ impl TokenStream {
         self.tokens.get(self.index)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn token_stream_parsing() {
+        let source = r#"A ab ( ) ¬ ~ ! && ∧ & . || ∨ | -> → ⇒ ⊃ == <-> ↔ ⇔ ≡"#;
+        let token_stream = TokenStream::parse(source).unwrap();
+
+        let tokens = [
+            TokenKind::Identifier(String::from("A")),
+            TokenKind::Identifier(String::from("ab")),
+            TokenKind::Delimiter(Delimiter::Open),
+            TokenKind::Delimiter(Delimiter::Close),
+            TokenKind::Operation(Operation::Negation),
+            TokenKind::Operation(Operation::Negation),
+            TokenKind::Operation(Operation::Negation),
+            TokenKind::Operation(Operation::Conjunction),
+            TokenKind::Operation(Operation::Conjunction),
+            TokenKind::Operation(Operation::Conjunction),
+            TokenKind::Operation(Operation::Conjunction),
+            TokenKind::Operation(Operation::Disjunction),
+            TokenKind::Operation(Operation::Disjunction),
+            TokenKind::Operation(Operation::Disjunction),
+            TokenKind::Operation(Operation::Implication),
+            TokenKind::Operation(Operation::Implication),
+            TokenKind::Operation(Operation::Implication),
+            TokenKind::Operation(Operation::Implication),
+            TokenKind::Operation(Operation::BiImplication),
+            TokenKind::Operation(Operation::BiImplication),
+            TokenKind::Operation(Operation::BiImplication),
+            TokenKind::Operation(Operation::BiImplication),
+            TokenKind::Operation(Operation::BiImplication),
+        ];
+
+        for (i, token) in token_stream.tokens.into_iter().enumerate() {
+            assert_eq!(*token.kind(), tokens[i]);
+        }
+    }
+}
