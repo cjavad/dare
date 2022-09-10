@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::ops::{Add, AddAssign, Range};
 
 /// Describes a part of a string.
 ///
@@ -44,5 +44,32 @@ impl Span {
     /// ```
     pub const fn range(&self) -> Range<usize> {
         self.start..self.end()
+    }
+}
+
+/// When two [`Span`]s are added the result is a [`Span`] that contains both [`Span`]s.
+///
+/// # Example
+/// ```rust
+/// # use dare::Span;
+/// assert_eq!(Span::new(0, 2) + Span::new(4, 3), Span::new(0, 7));
+/// ```
+impl Add for Span {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let start = self.start().min(rhs.start());
+        let end = self.end().max(rhs.end());
+
+        Self::new(start, end - start)
+    }
+}
+
+impl<T> AddAssign<T> for Span
+where
+    Self: Add<T, Output = Self>,
+{
+    fn add_assign(&mut self, rhs: T) {
+        *self = *self + rhs;
     }
 }
