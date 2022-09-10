@@ -1,6 +1,6 @@
 use std::{iter::Peekable, str::Chars};
 
-use crate::{Delimiter, Error, Operation, Span, Token, TokenKind};
+use crate::{Delimiter, Error, Operator, Span, Token, TokenKind};
 
 struct Lexer<'a> {
     index: usize,
@@ -52,25 +52,25 @@ impl<'a> Lexer<'a> {
         Ok(match (ch, next) {
             ('(', _) => TokenKind::Delimiter(Delimiter::Open),
             (')', _) => TokenKind::Delimiter(Delimiter::Close),
-            ('¬', _) | ('~', _) | ('!', _) => TokenKind::Operation(Operation::Negation),
+            ('¬', _) | ('~', _) | ('!', _) => TokenKind::Operator(Operator::Negation),
             ('&', Some('&')) => {
                 self.next();
-                TokenKind::Operation(Operation::Conjunction)
+                TokenKind::Operator(Operator::Conjunction)
             }
-            ('∧', _) | ('&', _) | ('.', _) => TokenKind::Operation(Operation::Conjunction),
+            ('∧', _) | ('&', _) | ('.', _) => TokenKind::Operator(Operator::Conjunction),
             ('|', Some('|')) => {
                 self.next();
-                TokenKind::Operation(Operation::Disjunction)
+                TokenKind::Operator(Operator::Disjunction)
             }
-            ('∨', _) | ('|', _) => TokenKind::Operation(Operation::Disjunction),
+            ('∨', _) | ('|', _) => TokenKind::Operator(Operator::Disjunction),
             ('-', Some('>')) => {
                 self.next();
-                TokenKind::Operation(Operation::Implication)
+                TokenKind::Operator(Operator::Implication)
             }
-            ('→', _) | ('⇒', _) | ('⊃', _) => TokenKind::Operation(Operation::Implication),
+            ('→', _) | ('⇒', _) | ('⊃', _) => TokenKind::Operator(Operator::Implication),
             ('=', Some('=')) => {
                 self.next();
-                TokenKind::Operation(Operation::BiImplication)
+                TokenKind::Operator(Operator::Equivalence)
             }
             ('<', Some('-')) => {
                 self.next();
@@ -84,9 +84,9 @@ impl<'a> Lexer<'a> {
                     return Err(error);
                 }
 
-                TokenKind::Operation(Operation::BiImplication)
+                TokenKind::Operator(Operator::Equivalence)
             }
-            ('↔', _) | ('⇔', _) | ('≡', _) => TokenKind::Operation(Operation::BiImplication),
+            ('↔', _) | ('⇔', _) | ('≡', _) => TokenKind::Operator(Operator::Equivalence),
             _ => {
                 return {
                     let error = Error::new()
@@ -184,25 +184,25 @@ mod tests {
             TokenKind::Identifier(String::from("ab")),
             TokenKind::Delimiter(Delimiter::Open),
             TokenKind::Delimiter(Delimiter::Close),
-            TokenKind::Operation(Operation::Negation),
-            TokenKind::Operation(Operation::Negation),
-            TokenKind::Operation(Operation::Negation),
-            TokenKind::Operation(Operation::Conjunction),
-            TokenKind::Operation(Operation::Conjunction),
-            TokenKind::Operation(Operation::Conjunction),
-            TokenKind::Operation(Operation::Conjunction),
-            TokenKind::Operation(Operation::Disjunction),
-            TokenKind::Operation(Operation::Disjunction),
-            TokenKind::Operation(Operation::Disjunction),
-            TokenKind::Operation(Operation::Implication),
-            TokenKind::Operation(Operation::Implication),
-            TokenKind::Operation(Operation::Implication),
-            TokenKind::Operation(Operation::Implication),
-            TokenKind::Operation(Operation::BiImplication),
-            TokenKind::Operation(Operation::BiImplication),
-            TokenKind::Operation(Operation::BiImplication),
-            TokenKind::Operation(Operation::BiImplication),
-            TokenKind::Operation(Operation::BiImplication),
+            TokenKind::Operator(Operator::Negation),
+            TokenKind::Operator(Operator::Negation),
+            TokenKind::Operator(Operator::Negation),
+            TokenKind::Operator(Operator::Conjunction),
+            TokenKind::Operator(Operator::Conjunction),
+            TokenKind::Operator(Operator::Conjunction),
+            TokenKind::Operator(Operator::Conjunction),
+            TokenKind::Operator(Operator::Disjunction),
+            TokenKind::Operator(Operator::Disjunction),
+            TokenKind::Operator(Operator::Disjunction),
+            TokenKind::Operator(Operator::Implication),
+            TokenKind::Operator(Operator::Implication),
+            TokenKind::Operator(Operator::Implication),
+            TokenKind::Operator(Operator::Implication),
+            TokenKind::Operator(Operator::Equivalence),
+            TokenKind::Operator(Operator::Equivalence),
+            TokenKind::Operator(Operator::Equivalence),
+            TokenKind::Operator(Operator::Equivalence),
+            TokenKind::Operator(Operator::Equivalence),
         ];
 
         for (i, token) in token_stream.tokens.into_iter().enumerate() {

@@ -30,7 +30,7 @@ impl Token {
 pub enum TokenKind {
     Identifier(String),
     Delimiter(Delimiter),
-    Operation(Operation),
+    Operator(Operator),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -40,25 +40,25 @@ pub enum Delimiter {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Operation {
+pub enum Operator {
     Negation,
     Conjunction,
     Disjunction,
     Implication,
-    BiImplication,
+    Equivalence,
 }
 
-impl Operation {
+impl Operator {
     /// Returns the precedence.
     ///
     /// **Note** that a lower number means a higher precedence.
     pub const fn precedence(&self) -> i32 {
         match self {
-            Operation::Negation => 0,
-            Operation::Conjunction => 1,
-            Operation::Disjunction => 2,
-            Operation::Implication => 3,
-            Operation::BiImplication => 4,
+            Operator::Negation => 0,
+            Operator::Conjunction => 1,
+            Operator::Disjunction => 2,
+            Operator::Implication => 3,
+            Operator::Equivalence => 4,
         }
     }
 }
