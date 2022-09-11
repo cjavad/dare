@@ -46,7 +46,7 @@ From [https://en.wikipedia.org/wiki/List_of_logic_symbols](https://en.wikipedia.
   - `∧`, `&`, `&&`, `.`
 - (5) Disjunction (OR)
   - `∨`, `|`, `||`
-- (5) Excluse Disjunction (XOR)
+- (5) Exclusive Disjunction (XOR)
   - `⊕`, `⊻`, `+`, `↮`, `≢`
 - (6) Tautology (True)
   - `T`, `1`, `⊤`, `■`
@@ -135,6 +135,26 @@ We allow the use of multiple types of characters for the different operations to
 | - | ----- |
 | T | F     |
 | F | F     |
+
+## Behaviour of associative operations (#8)
+
+We solve this issue by first defining a "strict mode". In "strict mode" all non-associative operations are required to be seperated individually by parentheses.
+
+Ex.
+
+`a <-> b <-> c`
+
+Is required to be either:
+
+`(a <-> b) <-> c` or `a <-> (b <-> c)`
+
+In non-strict mode (which can be enabled via a argument) we default to the left-to-right reading so we parse the original expression as `(a <-> b) <-> c`. Otherwise the program will terminate with an grammar error.
+
+For other non-assosiative chained operations we first order them by precedence so for instance `~a | b & c` will with this defintion of precedence from Wikipedia
+![image](https://user-images.githubusercontent.com/22474016/189505924-9cba4abe-736e-4572-8dbb-1a7f7e4da2e9.png)
+turn into `(~a) | (b & c)`.
+
+But with our traditional definition of precedence where the conjunction and disconjuction (and hereby the Exclusive Disconjunction) that defines them as having the same precedence, the previous rules regarding strict and right-to-left are applied so the above expression becomes `((~a) | b) & c` unless otherwise specified. In the case of strict mode the program will terminate with an grammar error as the explicit parentheses needs to be defined.
 
 ## Parsing and evaluation (sub-expressions)
 
