@@ -99,15 +99,23 @@ impl<'a> Lexer<'a> {
         })
     }
 
+    fn is_identifier_first_char(ch: char) -> bool {
+        ch.is_alphabetic() || ch == '_'
+    }
+
+    fn is_identifier_char(ch: char) -> bool {
+        ch.is_alphanumeric() || ch == '_'
+    }
+
     fn is_identifier(&mut self) -> bool {
-        self.peek().map_or(false, char::is_alphabetic)
+        self.peek().map_or(false, Self::is_identifier_first_char)
     }
 
     /// **Note** ``self.next()`` must be a valid starting character for an identifier.
     fn parse_identifier(&mut self) -> TokenKind {
         let mut identifier = String::new();
 
-        while self.peek().map_or(false, char::is_alphabetic) {
+        while self.peek().map_or(false, Self::is_identifier_char) {
             identifier.push(self.next().unwrap());
         }
 
@@ -176,12 +184,14 @@ mod tests {
 
     #[test]
     fn token_stream_parsing() {
-        let source = r#"A ab ( ) ¬ ~ ! && ∧ & . || ∨ | -> → ⇒ ⊃ == <-> ↔ ⇔ ≡"#;
+        let source = r#"A ab _a _0_a ( ) ¬ ~ ! && ∧ & . || ∨ | -> → ⇒ ⊃ == <-> ↔ ⇔ ≡"#;
         let token_stream = TokenStream::parse(source).unwrap();
 
         let tokens = [
             TokenKind::Identifier(String::from("A")),
             TokenKind::Identifier(String::from("ab")),
+            TokenKind::Identifier(String::from("_a")),
+            TokenKind::Identifier(String::from("_0_a")),
             TokenKind::Delimiter(Delimiter::Open),
             TokenKind::Delimiter(Delimiter::Close),
             TokenKind::Operator(Operator::Negation),
