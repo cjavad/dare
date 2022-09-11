@@ -184,12 +184,14 @@ mod tests {
 
     #[test]
     fn token_stream_parsing() {
-        let source = r#"A ab ( ) ¬ ~ ! && ∧ & . || ∨ | -> → ⇒ ⊃ == <-> ↔ ⇔ ≡"#;
+        let source = r#"A ab _a _0_a ( ) ¬ ~ ! && ∧ & . || ∨ | -> → ⇒ ⊃ == <-> ↔ ⇔ ≡"#;
         let token_stream = TokenStream::parse(source).unwrap();
 
         let tokens = [
             TokenKind::Identifier(String::from("A")),
             TokenKind::Identifier(String::from("ab")),
+            TokenKind::Identifier(String::from("_a")),
+            TokenKind::Identifier(String::from("_0_a")),
             TokenKind::Delimiter(Delimiter::Open),
             TokenKind::Delimiter(Delimiter::Close),
             TokenKind::Operator(Operator::Negation),
