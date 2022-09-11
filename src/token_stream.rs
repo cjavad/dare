@@ -1,6 +1,6 @@
 use std::{iter::Peekable, str::Chars};
 
-use crate::{Delimiter, Error, Operator, Span, Token, TokenKind};
+use crate::{BinaryOperator, Delimiter, Error, Span, Token, TokenKind, UnaryOperator};
 
 struct Lexer<'a> {
     index: usize,
@@ -52,25 +52,29 @@ impl<'a> Lexer<'a> {
         Ok(match (ch, next) {
             ('(', _) => TokenKind::Delimiter(Delimiter::Open),
             (')', _) => TokenKind::Delimiter(Delimiter::Close),
-            ('¬', _) | ('~', _) | ('!', _) => TokenKind::Operator(Operator::Negation),
+            ('¬', _) | ('~', _) | ('!', _) => TokenKind::UnaryOperator(UnaryOperator::Negation),
             ('&', Some('&')) => {
                 self.next();
-                TokenKind::Operator(Operator::Conjunction)
+                TokenKind::BinaryOperator(BinaryOperator::Conjunction)
             }
-            ('∧', _) | ('&', _) | ('.', _) => TokenKind::Operator(Operator::Conjunction),
+            ('∧', _) | ('&', _) | ('.', _) => {
+                TokenKind::BinaryOperator(BinaryOperator::Conjunction)
+            }
             ('|', Some('|')) => {
                 self.next();
-                TokenKind::Operator(Operator::Disjunction)
+                TokenKind::BinaryOperator(BinaryOperator::Disjunction)
             }
-            ('∨', _) | ('|', _) => TokenKind::Operator(Operator::Disjunction),
+            ('∨', _) | ('|', _) => TokenKind::BinaryOperator(BinaryOperator::Disjunction),
             ('-', Some('>')) => {
                 self.next();
-                TokenKind::Operator(Operator::Implication)
+                TokenKind::BinaryOperator(BinaryOperator::Implication)
             }
-            ('→', _) | ('⇒', _) | ('⊃', _) => TokenKind::Operator(Operator::Implication),
+            ('→', _) | ('⇒', _) | ('⊃', _) => {
+                TokenKind::BinaryOperator(BinaryOperator::Implication)
+            }
             ('=', Some('=')) => {
                 self.next();
-                TokenKind::Operator(Operator::Equivalence)
+                TokenKind::BinaryOperator(BinaryOperator::Equivalence)
             }
             ('<', Some('-')) => {
                 self.next();
@@ -84,9 +88,11 @@ impl<'a> Lexer<'a> {
                     return Err(error);
                 }
 
-                TokenKind::Operator(Operator::Equivalence)
+                TokenKind::BinaryOperator(BinaryOperator::Equivalence)
             }
-            ('↔', _) | ('⇔', _) | ('≡', _) => TokenKind::Operator(Operator::Equivalence),
+            ('↔', _) | ('⇔', _) | ('≡', _) => {
+                TokenKind::BinaryOperator(BinaryOperator::Equivalence)
+            }
             _ => {
                 return {
                     let error = Error::new()
@@ -141,6 +147,7 @@ impl<'a> Lexer<'a> {
 pub struct TokenStream {
     tokens: Vec<Token>,
     index: usize,
+    eof_span: Span,
 }
 
 impl TokenStream {
@@ -153,7 +160,11 @@ impl TokenStream {
             tokens.push(lexer.parse_token()?);
         }
 
-        Ok(Self { tokens, index: 0 })
+        Ok(Self {
+            tokens,
+            index: 0,
+            eof_span: lexer.span(),
+        })
     }
 
     /// Returns `true` if there are no more [`Token`]s left in `self`.
@@ -161,20 +172,64 @@ impl TokenStream {
         self.index == self.tokens.len()
     }
 
+    pub fn span(&self) -> Span {
+        if self.tokens.is_empty() {
+            Span::new(0, 0)
+        } else if let Some(token) = self.try_peek() {
+            token.span()
+        } else {
+            self.eof_span
+        }
+    }
+
     /// Returns the next [`Token`] in `self` and moves the stream forward by one.
     ///
     /// Returns [`None`] if [`Self::is_empty`].
-    pub fn next(&mut self) -> Option<&Token> {
+    pub fn try_next(&mut self) -> Option<&Token> {
         let token = self.tokens.get(self.index);
         self.index += 1;
         token
     }
 
+    pub fn next(&mut self) -> Result<&Token, Error> {
+        let eof_span = self.eof_span;
+        self.try_next().ok_or_else(|| {
+            Error::new()
+                .with_msg("unexpected end of file")
+                .with_span(eof_span)
+        })
+    }
+
     /// Returns the next [`Token`] in `self`.
     ///
     /// Returns [`None`] if [`Self::is_empty`].
-    pub fn peek(&mut self) -> Option<&Token> {
+    pub fn try_peek(&self) -> Option<&Token> {
         self.tokens.get(self.index)
+    }
+
+    pub fn peek(&self) -> Result<&Token, Error> {
+        self.try_peek().ok_or_else(|| {
+            Error::new()
+                .with_msg("unexpected end of file")
+                .with_span(self.eof_span)
+        })
+    }
+
+    pub fn try_peek_kind(&self) -> Option<&TokenKind> {
+        self.try_peek().map(|token| token.kind())
+    }
+
+    pub fn expect(&mut self, kind: &TokenKind) -> Result<&Token, Error> {
+        let token = self.next()?;
+        if token.kind() != kind {
+            let error = Error::new()
+                .with_msg(format!("expected symbol '{:?}'", kind))
+                .with_span(token.span());
+
+            return Err(error);
+        }
+
+        Ok(token)
     }
 }
 
@@ -194,25 +249,25 @@ mod tests {
             TokenKind::Identifier(String::from("_0_a")),
             TokenKind::Delimiter(Delimiter::Open),
             TokenKind::Delimiter(Delimiter::Close),
-            TokenKind::Operator(Operator::Negation),
-            TokenKind::Operator(Operator::Negation),
-            TokenKind::Operator(Operator::Negation),
-            TokenKind::Operator(Operator::Conjunction),
-            TokenKind::Operator(Operator::Conjunction),
-            TokenKind::Operator(Operator::Conjunction),
-            TokenKind::Operator(Operator::Conjunction),
-            TokenKind::Operator(Operator::Disjunction),
-            TokenKind::Operator(Operator::Disjunction),
-            TokenKind::Operator(Operator::Disjunction),
-            TokenKind::Operator(Operator::Implication),
-            TokenKind::Operator(Operator::Implication),
-            TokenKind::Operator(Operator::Implication),
-            TokenKind::Operator(Operator::Implication),
-            TokenKind::Operator(Operator::Equivalence),
-            TokenKind::Operator(Operator::Equivalence),
-            TokenKind::Operator(Operator::Equivalence),
-            TokenKind::Operator(Operator::Equivalence),
-            TokenKind::Operator(Operator::Equivalence),
+            TokenKind::UnaryOperator(UnaryOperator::Negation),
+            TokenKind::UnaryOperator(UnaryOperator::Negation),
+            TokenKind::UnaryOperator(UnaryOperator::Negation),
+            TokenKind::BinaryOperator(BinaryOperator::Conjunction),
+            TokenKind::BinaryOperator(BinaryOperator::Conjunction),
+            TokenKind::BinaryOperator(BinaryOperator::Conjunction),
+            TokenKind::BinaryOperator(BinaryOperator::Conjunction),
+            TokenKind::BinaryOperator(BinaryOperator::Disjunction),
+            TokenKind::BinaryOperator(BinaryOperator::Disjunction),
+            TokenKind::BinaryOperator(BinaryOperator::Disjunction),
+            TokenKind::BinaryOperator(BinaryOperator::Implication),
+            TokenKind::BinaryOperator(BinaryOperator::Implication),
+            TokenKind::BinaryOperator(BinaryOperator::Implication),
+            TokenKind::BinaryOperator(BinaryOperator::Implication),
+            TokenKind::BinaryOperator(BinaryOperator::Equivalence),
+            TokenKind::BinaryOperator(BinaryOperator::Equivalence),
+            TokenKind::BinaryOperator(BinaryOperator::Equivalence),
+            TokenKind::BinaryOperator(BinaryOperator::Equivalence),
+            TokenKind::BinaryOperator(BinaryOperator::Equivalence),
         ];
 
         for (i, token) in token_stream.tokens.into_iter().enumerate() {
