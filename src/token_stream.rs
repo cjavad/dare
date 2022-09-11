@@ -99,15 +99,23 @@ impl<'a> Lexer<'a> {
         })
     }
 
+    fn is_identifier_first_char(ch: char) -> bool {
+        ch.is_alphabetic() || ch == '_'
+    }
+
+    fn is_identifier_char(ch: char) -> bool {
+        ch.is_alphanumeric() || ch == '_'
+    }
+
     fn is_identifier(&mut self) -> bool {
-        self.peek().map_or(false, char::is_alphabetic)
+        self.peek().map_or(false, Self::is_identifier_first_char)
     }
 
     /// **Note** ``self.next()`` must be a valid starting character for an identifier.
     fn parse_identifier(&mut self) -> TokenKind {
         let mut identifier = String::new();
 
-        while self.peek().map_or(false, char::is_alphabetic) {
+        while self.peek().map_or(false, Self::is_identifier_char) {
             identifier.push(self.next().unwrap());
         }
 
