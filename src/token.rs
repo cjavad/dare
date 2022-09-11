@@ -30,7 +30,8 @@ impl Token {
 pub enum TokenKind {
     Identifier(String),
     Delimiter(Delimiter),
-    Operator(Operator),
+    UnaryOperator(UnaryOperator),
+    BinaryOperator(BinaryOperator),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -40,25 +41,37 @@ pub enum Delimiter {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Operator {
-    Negation,
+pub enum BinaryOperator {
     Conjunction,
     Disjunction,
     Implication,
     Equivalence,
 }
 
-impl Operator {
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum UnaryOperator {
+    Negation,
+}
+
+impl BinaryOperator {
     /// Returns the precedence.
     ///
     /// **Note** that a lower number means a higher precedence.
     pub const fn precedence(&self) -> i32 {
         match self {
-            Operator::Negation => 0,
-            Operator::Conjunction => 1,
-            Operator::Disjunction => 2,
-            Operator::Implication => 3,
-            Operator::Equivalence => 4,
+            BinaryOperator::Conjunction => 1,
+            BinaryOperator::Disjunction => 2,
+            BinaryOperator::Implication => 3,
+            BinaryOperator::Equivalence => 4,
+        }
+    }
+
+    pub const fn is_associative(&self) -> bool {
+        match self {
+            BinaryOperator::Conjunction => true,
+            BinaryOperator::Disjunction => true,
+            BinaryOperator::Implication => false,
+            BinaryOperator::Equivalence => false,
         }
     }
 }
