@@ -2,7 +2,7 @@ use crate::Span;
 
 #[derive(Clone, Debug)]
 pub enum UnaryOperatorKind {
-    Negation
+    Negation,
 }
 
 #[derive(Clone, Debug)]
@@ -33,7 +33,7 @@ pub struct AtomicExpression {
 #[derive(Clone, Debug)]
 pub struct UnaryExpression {
     pub operator: UnaryOperator,
-    pub operand: Expression
+    pub operand: Expression,
 }
 
 #[derive(Clone, Debug)]
