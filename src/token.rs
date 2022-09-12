@@ -56,6 +56,7 @@ impl std::fmt::Display for UnaryOperator {
 pub enum BinaryOperator {
     Conjunction(&'static str),
     Disjunction(&'static str),
+    ExclusiveDisjunction(&'static str),
     Implication(&'static str),
     Equivalence(&'static str),
 }
@@ -65,6 +66,7 @@ impl std::fmt::Display for BinaryOperator {
         match self {
             BinaryOperator::Conjunction(symbol) => f.write_str(symbol),
             BinaryOperator::Disjunction(symbol) => f.write_str(symbol),
+            BinaryOperator::ExclusiveDisjunction(symbol) => f.write_str(symbol),
             BinaryOperator::Implication(symbol) => f.write_str(symbol),
             BinaryOperator::Equivalence(symbol) => f.write_str(symbol),
         }
@@ -79,8 +81,9 @@ impl BinaryOperator {
         match self {
             BinaryOperator::Conjunction(_) => 1,
             BinaryOperator::Disjunction(_) => 2,
-            BinaryOperator::Implication(_) => 3,
-            BinaryOperator::Equivalence(_) => 4,
+            BinaryOperator::ExclusiveDisjunction(_) => 3,
+            BinaryOperator::Implication(_) => 4,
+            BinaryOperator::Equivalence(_) => 5,
         }
     }
 
@@ -88,6 +91,7 @@ impl BinaryOperator {
         match self {
             BinaryOperator::Conjunction(_) => true,
             BinaryOperator::Disjunction(_) => true,
+            BinaryOperator::ExclusiveDisjunction(_) => true,
             BinaryOperator::Implication(_) => false,
             BinaryOperator::Equivalence(_) => false,
         }

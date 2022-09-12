@@ -72,6 +72,11 @@ impl<'a> Lexer<'a> {
                 self.next();
                 TokenKind::BinaryOperator(BinaryOperator::Implication("->"))
             }
+            ('⊕', _) => TokenKind::BinaryOperator(BinaryOperator::ExclusiveDisjunction("⊕")),
+            ('⊻', _) => TokenKind::BinaryOperator(BinaryOperator::ExclusiveDisjunction("⊻")),
+            ('↮', _) => TokenKind::BinaryOperator(BinaryOperator::ExclusiveDisjunction("↮")),
+            ('≢', _) => TokenKind::BinaryOperator(BinaryOperator::ExclusiveDisjunction("≢")),
+            ('+', _) => TokenKind::BinaryOperator(BinaryOperator::ExclusiveDisjunction("+")),
             ('→', _) => TokenKind::BinaryOperator(BinaryOperator::Implication("→")),
             ('⇒', _) => TokenKind::BinaryOperator(BinaryOperator::Implication("⇒")),
             ('⊃', _) => TokenKind::BinaryOperator(BinaryOperator::Implication("⊃")),
@@ -242,7 +247,7 @@ mod tests {
 
     #[test]
     fn token_stream_parsing() {
-        let source = r#"A ab _a _0_a ( ) ¬ ~ ! && ∧ & . || ∨ | -> → ⇒ ⊃ == <-> ↔ ⇔ ≡"#;
+        let source = r#"A ab _a _0_a ( ) ¬ ~ ! && ∧ & . || ∨ | ⊕ ⊻ + ↮ ≢ -> → ⇒ ⊃ == <-> ↔ ⇔ ≡"#;
         let token_stream = TokenStream::parse(source).unwrap();
 
         let tokens = [
@@ -262,6 +267,11 @@ mod tests {
             TokenKind::BinaryOperator(BinaryOperator::Disjunction("||")),
             TokenKind::BinaryOperator(BinaryOperator::Disjunction("∨")),
             TokenKind::BinaryOperator(BinaryOperator::Disjunction("|")),
+            TokenKind::BinaryOperator(BinaryOperator::ExclusiveDisjunction("⊕")),
+            TokenKind::BinaryOperator(BinaryOperator::ExclusiveDisjunction("⊻")),
+            TokenKind::BinaryOperator(BinaryOperator::ExclusiveDisjunction("+")),
+            TokenKind::BinaryOperator(BinaryOperator::ExclusiveDisjunction("↮")),
+            TokenKind::BinaryOperator(BinaryOperator::ExclusiveDisjunction("≢")),
             TokenKind::BinaryOperator(BinaryOperator::Implication("->")),
             TokenKind::BinaryOperator(BinaryOperator::Implication("→")),
             TokenKind::BinaryOperator(BinaryOperator::Implication("⇒")),
