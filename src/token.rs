@@ -28,6 +28,7 @@ impl Token {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TokenKind {
+    TruthValue(bool),
     Identifier(String),
     Delimiter(Delimiter),
     UnaryOperator(UnaryOperator),
@@ -54,6 +55,7 @@ impl std::fmt::Display for UnaryOperator {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BinaryOperator {
+    Assignment(&'static str),
     Conjunction(&'static str),
     Disjunction(&'static str),
     ExclusiveDisjunction(&'static str),
@@ -64,6 +66,7 @@ pub enum BinaryOperator {
 impl std::fmt::Display for BinaryOperator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            BinaryOperator::Assignment(symbol) => f.write_str(symbol),
             BinaryOperator::Conjunction(symbol) => f.write_str(symbol),
             BinaryOperator::Disjunction(symbol) => f.write_str(symbol),
             BinaryOperator::ExclusiveDisjunction(symbol) => f.write_str(symbol),
@@ -79,6 +82,7 @@ impl BinaryOperator {
     /// **Note** that a lower number means a higher precedence.
     pub const fn precedence(&self) -> i32 {
         match self {
+            BinaryOperator::Assignment(_) => 0,
             BinaryOperator::Conjunction(_) => 1,
             BinaryOperator::Disjunction(_) => 2,
             BinaryOperator::ExclusiveDisjunction(_) => 3,
@@ -89,6 +93,7 @@ impl BinaryOperator {
 
     pub const fn is_associative(&self) -> bool {
         match self {
+            BinaryOperator::Assignment(_) => false,
             BinaryOperator::Conjunction(_) => true,
             BinaryOperator::Disjunction(_) => true,
             BinaryOperator::ExclusiveDisjunction(_) => true,
