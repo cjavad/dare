@@ -1,6 +1,6 @@
 use crate::{
     AtomicExpression, BinaryExpression, Delimiter, Error, Expression, ExpressionKind,
-    ParenExpression, TokenKind, TokenStream, UnaryExpression,
+    ParenExpression, TokenKind, TokenStream, TruthValueExpression, UnaryExpression,
 };
 
 #[derive(Clone, Debug, Default)]
@@ -17,6 +17,18 @@ impl Parser {
                 ident: identifier.clone(),
             }),
             _ => Err(Error::new().with_msg("expected atomic expression")),
+        }
+    }
+
+    pub fn parse_truthvalue_expr(
+        &self,
+        tokens: &mut TokenStream,
+    ) -> Result<TruthValueExpression, Error> {
+        match tokens.next()?.kind() {
+            TokenKind::TruthValue(value) => Ok(TruthValueExpression {
+                value: value.clone(),
+            }),
+            _ => Err(Error::new().with_msg("expected truth value expression")),
         }
     }
 
@@ -47,7 +59,15 @@ impl Parser {
                     span: start_span + end_span,
                 })
             }
-
+            TokenKind::TruthValue(_) => {
+                let start_span = tokens.span();
+                let expression = self.parse_truthvalue_expr(tokens)?;
+                let end_span = tokens.span();
+                Ok(Expression {
+                    kind: Box::new(ExpressionKind::TruthValue(expression)),
+                    span: start_span + end_span,
+                })
+            }
             _ => {
                 let error = Error::new()
                     .with_msg("expected expression")
@@ -162,10 +182,15 @@ mod tests {
             "A -> B",
             "A <-> B",
             "A ⊕ B",
-            "A + B",
+            "A ^ B",
             "(A -> B) & (B -> C)",
             "A -> (B -> C)",
             "(A -> B) -> C",
+            "A : B",
+            "A := B",
+            "A := 1",
+            "(A -> B) & (B -> C) & (C -> D)",
+            "(A -> B) : 0",
         }
     }
 }
