@@ -3,6 +3,7 @@ use crate::{BinaryOperator, Span, UnaryOperator};
 #[derive(Clone, Debug)]
 pub struct TruthValueExpression {
     pub value: bool,
+    pub span: Span,
 }
 
 impl std::fmt::Display for TruthValueExpression {
@@ -21,6 +22,7 @@ impl std::fmt::Display for TruthValueExpression {
 #[derive(Clone, Debug)]
 pub struct AtomicExpression {
     pub ident: String,
+    pub span: Span,
 }
 
 impl std::fmt::Display for AtomicExpression {

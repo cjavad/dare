@@ -12,9 +12,11 @@ impl Parser {
     }
 
     pub fn parse_atomic_expr(&self, tokens: &mut TokenStream) -> Result<AtomicExpression, Error> {
-        match tokens.next()?.kind() {
+        let next_token = tokens.next()?;
+        match next_token.kind() {
             TokenKind::Identifier(identifier) => Ok(AtomicExpression {
                 ident: identifier.clone(),
+                span: next_token.span().clone(),
             }),
             _ => Err(Error::new().with_msg("expected atomic expression")),
         }
@@ -24,9 +26,11 @@ impl Parser {
         &self,
         tokens: &mut TokenStream,
     ) -> Result<TruthValueExpression, Error> {
-        match tokens.next()?.kind() {
+        let next_token = tokens.next()?;
+        match next_token.kind() {
             TokenKind::TruthValue(value) => Ok(TruthValueExpression {
                 value: value.clone(),
+                span: next_token.span().clone(),
             }),
             _ => Err(Error::new().with_msg("expected truth value expression")),
         }
