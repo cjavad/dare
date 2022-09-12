@@ -133,15 +133,11 @@ mod tests {
 
     #[test]
     fn test_interpret() {
-        fn get_expr(source: &str) -> Expression {
-            let parser = Parser::new();
-            let tokens = &mut TokenStream::parse(source).unwrap();
-            parser.parse(tokens).unwrap()
-        }
-
         macro_rules! interpreter_test_identical {
             ($source:expr, $expected:expr, $identical_bool:expr) => {
-                let expr = get_expr($source);
+                let parser = Parser::new();
+                let tokens = &mut TokenStream::parse($source).unwrap();
+                let expr = parser.parse(tokens).unwrap();
                 let mut interpreter = Interpreter::new();
                 interpreter.extract_atomic_expressions(&expr);
                 for atomic_expr in &interpreter.atomic_expressions {
@@ -170,5 +166,38 @@ mod tests {
         interpreter_test_identical!("a -> b", true, false);
         interpreter_test_identical!("a <-> b", true, true);
         interpreter_test_identical!("a <-> b", true, false);
+        interpreter_test_identical!("!(a) -> !b", true, true);
+        // De Morgan's laws
+        interpreter_test_identical!("!(a & b) == (!a & !b)", true, true);
+        interpreter_test_identical!("!(a | b) == (!a | !b)", true, true);
+        // Associativity
+        interpreter_test_identical!("a & b & c", true, true);
+        interpreter_test_identical!("a | b | c", true, true);
+        interpreter_test_identical!("a ^ b ^ c", true, true);
+        // Commutativity
+        interpreter_test_identical!("a & b == b & a", true, true);
+        interpreter_test_identical!("a | b == b | a", true, true);
+        interpreter_test_identical!("a ^ b == b ^ a", true, true);
+        // Distributivity
+        interpreter_test_identical!("a & (b | c) == (a & b) | (a & c)", true, true);
+        interpreter_test_identical!("a | (b & c) == (a | b) & (a | c)", true, true);
+        // Idempotence
+        interpreter_test_identical!("a & a == a", true, true);
+        interpreter_test_identical!("a | a == a", true, true);
+        interpreter_test_identical!("a ^ a == a", true, false);
+        // Absorption
+        interpreter_test_identical!("a & (a | b) == a", true, true);
+        interpreter_test_identical!("a | (a & b) == a", true, true);
+        // Identity
+        interpreter_test_identical!("a & 1 == a", true, true);
+        interpreter_test_identical!("a | 0 == a", true, true);
+        // Negation
+        interpreter_test_identical!("a & !a == 0", true, true);
+        interpreter_test_identical!("a | !a == 1", true, true);
+        // Double negation
+        interpreter_test_identical!("!!a == a", true, true);
+        // Absorption
+        interpreter_test_identical!("a & (a | b) == a", true, true);
+        interpreter_test_identical!("a | (a & b) == a", true, true);
     }
 }
