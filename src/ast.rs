@@ -7,10 +7,14 @@ pub struct TruthValueExpression {
 
 impl std::fmt::Display for TruthValueExpression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self.value {
-            true => "1",
-            false => "0",
-        })
+        write!(
+            f,
+            "{}",
+            match self.value {
+                true => "1",
+                false => "0",
+            }
+        )
     }
 }
 
