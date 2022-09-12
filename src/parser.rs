@@ -137,3 +137,34 @@ impl Parser {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parser() {
+        let parser = Parser::new();
+
+        macro_rules! parser_tests {
+            ($($source:literal),* $(,)?) => {$({
+                let mut tokens = TokenStream::parse($source).unwrap();
+                let expr = parser.parse(&mut tokens).unwrap();
+                assert_eq!(expr.to_string(), $source);
+            })*};
+        }
+
+        parser_tests! {
+            "A",
+            "~A",
+            "A & B",
+            "A | B",
+            "A -> B",
+            "A <-> B",
+            // "A {xor} B",
+            "(A -> B) & (B -> C)",
+            "A -> (B -> C)",
+            "(A -> B) -> C",
+        }
+    }
+}

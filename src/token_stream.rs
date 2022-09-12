@@ -52,29 +52,32 @@ impl<'a> Lexer<'a> {
         Ok(match (ch, next) {
             ('(', _) => TokenKind::Delimiter(Delimiter::Open),
             (')', _) => TokenKind::Delimiter(Delimiter::Close),
-            ('¬', _) | ('~', _) | ('!', _) => TokenKind::UnaryOperator(UnaryOperator::Negation),
+            ('¬', _) => TokenKind::UnaryOperator(UnaryOperator::Negation("¬")),
+            ('~', _) => TokenKind::UnaryOperator(UnaryOperator::Negation("~")),
+            ('!', _) => TokenKind::UnaryOperator(UnaryOperator::Negation("!")),
             ('&', Some('&')) => {
                 self.next();
-                TokenKind::BinaryOperator(BinaryOperator::Conjunction)
+                TokenKind::BinaryOperator(BinaryOperator::Conjunction("&&"))
             }
-            ('∧', _) | ('&', _) | ('.', _) => {
-                TokenKind::BinaryOperator(BinaryOperator::Conjunction)
-            }
+            ('∧', _) => TokenKind::BinaryOperator(BinaryOperator::Conjunction("∧")),
+            ('&', _) => TokenKind::BinaryOperator(BinaryOperator::Conjunction("&")),
+            ('.', _) => TokenKind::BinaryOperator(BinaryOperator::Conjunction(".")),
             ('|', Some('|')) => {
                 self.next();
-                TokenKind::BinaryOperator(BinaryOperator::Disjunction)
+                TokenKind::BinaryOperator(BinaryOperator::Disjunction("||"))
             }
-            ('∨', _) | ('|', _) => TokenKind::BinaryOperator(BinaryOperator::Disjunction),
+            ('∨', _) => TokenKind::BinaryOperator(BinaryOperator::Disjunction("∨")),
+            ('|', _) => TokenKind::BinaryOperator(BinaryOperator::Disjunction("|")),
             ('-', Some('>')) => {
                 self.next();
-                TokenKind::BinaryOperator(BinaryOperator::Implication)
+                TokenKind::BinaryOperator(BinaryOperator::Implication("->"))
             }
-            ('→', _) | ('⇒', _) | ('⊃', _) => {
-                TokenKind::BinaryOperator(BinaryOperator::Implication)
-            }
+            ('→', _) => TokenKind::BinaryOperator(BinaryOperator::Implication("→")),
+            ('⇒', _) => TokenKind::BinaryOperator(BinaryOperator::Implication("⇒")),
+            ('⊃', _) => TokenKind::BinaryOperator(BinaryOperator::Implication("⊃")),
             ('=', Some('=')) => {
                 self.next();
-                TokenKind::BinaryOperator(BinaryOperator::Equivalence)
+                TokenKind::BinaryOperator(BinaryOperator::Equivalence("=="))
             }
             ('<', Some('-')) => {
                 self.next();
@@ -88,11 +91,11 @@ impl<'a> Lexer<'a> {
                     return Err(error);
                 }
 
-                TokenKind::BinaryOperator(BinaryOperator::Equivalence)
+                TokenKind::BinaryOperator(BinaryOperator::Equivalence("<->"))
             }
-            ('↔', _) | ('⇔', _) | ('≡', _) => {
-                TokenKind::BinaryOperator(BinaryOperator::Equivalence)
-            }
+            ('↔', _) => TokenKind::BinaryOperator(BinaryOperator::Equivalence("↔")),
+            ('⇔', _) => TokenKind::BinaryOperator(BinaryOperator::Equivalence("⇔")),
+            ('≡', _) => TokenKind::BinaryOperator(BinaryOperator::Equivalence("≡")),
             _ => {
                 return {
                     let error = Error::new()
@@ -249,25 +252,25 @@ mod tests {
             TokenKind::Identifier(String::from("_0_a")),
             TokenKind::Delimiter(Delimiter::Open),
             TokenKind::Delimiter(Delimiter::Close),
-            TokenKind::UnaryOperator(UnaryOperator::Negation),
-            TokenKind::UnaryOperator(UnaryOperator::Negation),
-            TokenKind::UnaryOperator(UnaryOperator::Negation),
-            TokenKind::BinaryOperator(BinaryOperator::Conjunction),
-            TokenKind::BinaryOperator(BinaryOperator::Conjunction),
-            TokenKind::BinaryOperator(BinaryOperator::Conjunction),
-            TokenKind::BinaryOperator(BinaryOperator::Conjunction),
-            TokenKind::BinaryOperator(BinaryOperator::Disjunction),
-            TokenKind::BinaryOperator(BinaryOperator::Disjunction),
-            TokenKind::BinaryOperator(BinaryOperator::Disjunction),
-            TokenKind::BinaryOperator(BinaryOperator::Implication),
-            TokenKind::BinaryOperator(BinaryOperator::Implication),
-            TokenKind::BinaryOperator(BinaryOperator::Implication),
-            TokenKind::BinaryOperator(BinaryOperator::Implication),
-            TokenKind::BinaryOperator(BinaryOperator::Equivalence),
-            TokenKind::BinaryOperator(BinaryOperator::Equivalence),
-            TokenKind::BinaryOperator(BinaryOperator::Equivalence),
-            TokenKind::BinaryOperator(BinaryOperator::Equivalence),
-            TokenKind::BinaryOperator(BinaryOperator::Equivalence),
+            TokenKind::UnaryOperator(UnaryOperator::Negation("¬")),
+            TokenKind::UnaryOperator(UnaryOperator::Negation("~")),
+            TokenKind::UnaryOperator(UnaryOperator::Negation("!")),
+            TokenKind::BinaryOperator(BinaryOperator::Conjunction("&&")),
+            TokenKind::BinaryOperator(BinaryOperator::Conjunction("∧")),
+            TokenKind::BinaryOperator(BinaryOperator::Conjunction("&")),
+            TokenKind::BinaryOperator(BinaryOperator::Conjunction(".")),
+            TokenKind::BinaryOperator(BinaryOperator::Disjunction("||")),
+            TokenKind::BinaryOperator(BinaryOperator::Disjunction("∨")),
+            TokenKind::BinaryOperator(BinaryOperator::Disjunction("|")),
+            TokenKind::BinaryOperator(BinaryOperator::Implication("->")),
+            TokenKind::BinaryOperator(BinaryOperator::Implication("→")),
+            TokenKind::BinaryOperator(BinaryOperator::Implication("⇒")),
+            TokenKind::BinaryOperator(BinaryOperator::Implication("⊃")),
+            TokenKind::BinaryOperator(BinaryOperator::Equivalence("==")),
+            TokenKind::BinaryOperator(BinaryOperator::Equivalence("<->")),
+            TokenKind::BinaryOperator(BinaryOperator::Equivalence("↔")),
+            TokenKind::BinaryOperator(BinaryOperator::Equivalence("⇔")),
+            TokenKind::BinaryOperator(BinaryOperator::Equivalence("≡")),
         ];
 
         for (i, token) in token_stream.tokens.into_iter().enumerate() {

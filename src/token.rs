@@ -41,16 +41,34 @@ pub enum Delimiter {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum BinaryOperator {
-    Conjunction,
-    Disjunction,
-    Implication,
-    Equivalence,
+pub enum UnaryOperator {
+    Negation(&'static str),
+}
+
+impl std::fmt::Display for UnaryOperator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Self::Negation(symbol) = self;
+        f.write_str(symbol)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum UnaryOperator {
-    Negation,
+pub enum BinaryOperator {
+    Conjunction(&'static str),
+    Disjunction(&'static str),
+    Implication(&'static str),
+    Equivalence(&'static str),
+}
+
+impl std::fmt::Display for BinaryOperator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BinaryOperator::Conjunction(symbol) => f.write_str(symbol),
+            BinaryOperator::Disjunction(symbol) => f.write_str(symbol),
+            BinaryOperator::Implication(symbol) => f.write_str(symbol),
+            BinaryOperator::Equivalence(symbol) => f.write_str(symbol),
+        }
+    }
 }
 
 impl BinaryOperator {
@@ -59,19 +77,19 @@ impl BinaryOperator {
     /// **Note** that a lower number means a higher precedence.
     pub const fn precedence(&self) -> i32 {
         match self {
-            BinaryOperator::Conjunction => 1,
-            BinaryOperator::Disjunction => 2,
-            BinaryOperator::Implication => 3,
-            BinaryOperator::Equivalence => 4,
+            BinaryOperator::Conjunction(_) => 1,
+            BinaryOperator::Disjunction(_) => 2,
+            BinaryOperator::Implication(_) => 3,
+            BinaryOperator::Equivalence(_) => 4,
         }
     }
 
     pub const fn is_associative(&self) -> bool {
         match self {
-            BinaryOperator::Conjunction => true,
-            BinaryOperator::Disjunction => true,
-            BinaryOperator::Implication => false,
-            BinaryOperator::Equivalence => false,
+            BinaryOperator::Conjunction(_) => true,
+            BinaryOperator::Disjunction(_) => true,
+            BinaryOperator::Implication(_) => false,
+            BinaryOperator::Equivalence(_) => false,
         }
     }
 }
