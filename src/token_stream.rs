@@ -117,8 +117,7 @@ impl<'a> Lexer<'a> {
     }
 
     fn is_truthvalue_or_identifier_first_char(ch: char) -> bool {
-        Self::is_identifier_first_char(ch)
-            || matches!(ch, 'T' | 'F' | '1' | '0' | '⊤' | '⊥' | '■' | '□')
+        Self::is_identifier_first_char(ch) || matches!(ch, 'T' | 'F' | '1' | '0')
     }
 
     fn is_identifier_first_char(ch: char) -> bool {
@@ -154,10 +153,6 @@ impl<'a> Lexer<'a> {
                 "F" => TokenKind::TruthValue(false),
                 "1" => TokenKind::TruthValue(true),
                 "0" => TokenKind::TruthValue(false),
-                "⊤" => TokenKind::TruthValue(true),
-                "⊥" => TokenKind::TruthValue(false),
-                "■" => TokenKind::TruthValue(true),
-                "□" => TokenKind::TruthValue(false),
                 _ => TokenKind::Identifier(identifier),
             })
         }
@@ -274,7 +269,8 @@ mod tests {
 
     #[test]
     fn token_stream_parsing() {
-        let source = r#"A ab _a _0_a ( ) := : ¬ ~ ! && ∧ & . || ∨ | ⊕ ⊻ ^ -> → ⇒ ⊃ == <-> ↔ ⇔ ≡"#;
+        let source =
+            r#"A ab _a _0_a ( ) := : ¬ ~ ! && ∧ & . || ∨ | ⊕ ⊻ ^ -> → ⇒ ⊃ == <-> ↔ ⇔ ≡ T F 1 0"#;
         let token_stream = TokenStream::parse(source).unwrap();
 
         let tokens = [
@@ -308,6 +304,10 @@ mod tests {
             TokenKind::BinaryOperator(BinaryOperator::Equivalence("↔")),
             TokenKind::BinaryOperator(BinaryOperator::Equivalence("⇔")),
             TokenKind::BinaryOperator(BinaryOperator::Equivalence("≡")),
+            TokenKind::TruthValue(true),
+            TokenKind::TruthValue(false),
+            TokenKind::TruthValue(true),
+            TokenKind::TruthValue(false),
         ];
 
         for (i, token) in token_stream.tokens.into_iter().enumerate() {

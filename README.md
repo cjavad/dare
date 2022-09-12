@@ -51,9 +51,9 @@ From [https://en.wikipedia.org/wiki/List_of_logic_symbols](https://en.wikipedia.
 - (8) Equivalence (IF AND ONLY IF)
   - `↔`, `<->`, `==`, `⇔`, `≡`
 - (9) Tautology (True)
-  - `T`, `1`, `⊤`, `■`
+  - `T`, `1`
 - (9) Contradiction (False)
-  - `F`, `0`, `⊥`, `□`
+  - `F`, `0`
 - (10) Atomic Propositions (Variables)
   - Any valid variable name. (To be defined)
 
