@@ -36,28 +36,30 @@ From [https://en.wikipedia.org/wiki/List_of_logic_symbols](https://en.wikipedia.
 
 - (1) Parentheses (Seperates subexpressions)
   - ``(, )``
-- (2) Implication (IF THEN)
-  - `→`, `->`, `⇒`, `⊃`
-- (3) Equivalence (IF AND ONLY IF)
-  - `↔`, `<->`, `==`, `⇔`, `≡`
-- (4) Negation (NOT)
+- (2) Assignment (Assigns a value to a proposition or logical expression)
+  - `:`, `:=`
+- (3) Negation (NOT)
   - `¬`, `~`, `!`
-- (5) Conjunction (AND)
+- (4) Conjunction (AND)
   - `∧`, `&`, `&&`, `.`
 - (5) Disjunction (OR)
   - `∨`, `|`, `||`
-- (5) Exclusive Disjunction (XOR)
-  - `⊕`, `⊻`, `+`, `↮`, `≢`
-- (6) Tautology (True)
+- (6) Exclusive Disjunction (XOR)
+  - `⊕`, `⊻`, `^`
+- (7) Implication (IF THEN)
+  - `→`, `->`, `⇒`, `⊃`
+- (8) Equivalence (IF AND ONLY IF)
+  - `↔`, `<->`, `==`, `⇔`, `≡`
+- (9) Tautology (True)
   - `T`, `1`, `⊤`, `■`
-- (6) Contradiction (False)
+- (9) Contradiction (False)
   - `F`, `0`, `⊥`, `□`
-- (7) Atomic Propositions (Variables)
+- (10) Atomic Propositions (Variables)
   - Any valid variable name. (To be defined)
 
 In the case multiple connectives of same precendence are used in the same expression, the precedence of the connectives is based on parentheses. For example, `p ∧ q ∨ r` needs to be specficied to `(p ∧ q) ∨ r` or `p ∧ (q ∨ r)`. Otherwise the grammer is incorrect.
 
-### Non logical operations
+### Non logical operations (to be defined)
 
 - Definition (Assigment)
   - `≡`, `:=`, `:⇔`
