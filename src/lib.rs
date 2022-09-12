@@ -4,6 +4,7 @@
 
 mod ast;
 mod error;
+mod interpreter;
 mod parser;
 mod span;
 mod token;
@@ -11,6 +12,7 @@ mod token_stream;
 
 pub use ast::*;
 pub use error::*;
+pub use interpreter::*;
 pub use parser::*;
 pub use span::*;
 pub use token::*;
