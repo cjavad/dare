@@ -117,8 +117,7 @@ impl<'a> Lexer<'a> {
     }
 
     fn is_truthvalue_or_identifier_first_char(ch: char) -> bool {
-        Self::is_identifier_first_char(ch)
-            || matches!(ch, 'T' | 'F' | '1' | '0')
+        Self::is_identifier_first_char(ch) || matches!(ch, 'T' | 'F' | '1' | '0')
     }
 
     fn is_identifier_first_char(ch: char) -> bool {
@@ -270,7 +269,8 @@ mod tests {
 
     #[test]
     fn token_stream_parsing() {
-        let source = r#"A ab _a _0_a ( ) := : ¬ ~ ! && ∧ & . || ∨ | ⊕ ⊻ ^ -> → ⇒ ⊃ == <-> ↔ ⇔ ≡ T F 1 0"#;
+        let source =
+            r#"A ab _a _0_a ( ) := : ¬ ~ ! && ∧ & . || ∨ | ⊕ ⊻ ^ -> → ⇒ ⊃ == <-> ↔ ⇔ ≡ T F 1 0"#;
         let token_stream = TokenStream::parse(source).unwrap();
 
         let tokens = [
