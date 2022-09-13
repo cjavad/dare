@@ -108,7 +108,7 @@ impl LatexTableauWriter {
 
     pub fn finalize(self) -> String {
         format!(
-            "\\begin{{picture}}({}, {})\n{}\t\\end{{picture}}",
+            "\\begin{{picture}}({}, {})\n{}\\end{{picture}}",
             self.width, self.height, self.buffer
         )
     }
@@ -134,13 +134,13 @@ impl TableauWriter for LatexTableauWriter {
             };
 
             let left = format!(
-                "\t\t\\put({}, {}){{\\makebox(0, 0)[r]{{{}}}}}\n",
+                "\t\\put({}, {}){{\\makebox(0, 0)[r]{{{}}}}}\n",
                 self.x - 4.0 + self.width / 2.0,
                 self.y + self.height,
                 writer.finalize()
             );
             let right = format!(
-                "\t\t\\put({}, {}){{\\makebox(0, 0)[l]{{$: {}$}}}}\n",
+                "\t\\put({}, {}){{\\makebox(0, 0)[l]{{$: {}$}}}}\n",
                 self.x - 1.5 + self.width / 2.0,
                 self.y + self.height,
                 value
@@ -164,7 +164,6 @@ impl TableauWriter for LatexTableauWriter {
 
             let calculated_width = Self::tableau_width(tableau);
             width_mod *= 1.0 - width / calculated_width;
-            eprintln!("{}", width_mod);
 
             writer.width = self.width;
             writer.height = self.height;
@@ -173,7 +172,7 @@ impl TableauWriter for LatexTableauWriter {
             writer.y = self.y - 20.0;
 
             self.buffer += &format!(
-                "\t\t\\qbezier({}, {})({}, {})({}, {})\n",
+                "\t\\qbezier({}, {})({}, {})({}, {})\n",
                 self.x + self.width / 2.0,
                 self.y + self.height,
                 (writer.x + self.x) / 2.0 + self.width / 2.0,

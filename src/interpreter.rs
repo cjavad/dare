@@ -129,7 +129,7 @@ impl Interpreter {
 // Compare this snippet from src\parser.rs:
 #[cfg(test)]
 mod tests {
-    use crate::{Parser, TokenStream};
+    use crate::Parser;
 
     use super::*;
 
@@ -138,8 +138,7 @@ mod tests {
         macro_rules! interpreter_test_identical {
             ($source:expr, $expected:expr, $identical_bool:expr) => {
                 let parser = Parser::new();
-                let tokens = &mut TokenStream::parse($source).unwrap();
-                let expr = parser.parse(tokens).unwrap();
+                let expr = parser.parse($source).unwrap();
                 let mut interpreter = Interpreter::new();
                 interpreter.extract_atomic_expressions(&expr);
                 for atomic_expr in &interpreter.atomic_expressions {
