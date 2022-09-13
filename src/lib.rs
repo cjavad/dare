@@ -7,6 +7,7 @@ mod error;
 mod interpreter;
 mod parser;
 mod span;
+mod tableau;
 mod token;
 mod token_stream;
 
@@ -15,5 +16,6 @@ pub use error::*;
 pub use interpreter::*;
 pub use parser::*;
 pub use span::*;
+pub use tableau::*;
 pub use token::*;
 pub use token_stream::*;
