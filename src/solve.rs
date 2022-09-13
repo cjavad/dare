@@ -50,6 +50,14 @@ impl Solutions {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.solutions.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.solutions.len()
+    }
+
     /// Pushes a variable on to all solutions.
     pub fn push(&mut self, name: impl Into<String>, value: bool) {
         let name = name.into();

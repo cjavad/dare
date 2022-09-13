@@ -117,14 +117,20 @@ fn main() {
             let mut solutions = Solutions::from(&tableau);
             solutions.clean();
 
-            print!("Solutions:");
+            if solutions.is_empty() {
+                println!("No solutions found.");
+            }
 
-            for solution in solutions.iter() {
-                println!();
+            for (i, solution) in solutions.iter().enumerate() {
+                println!("Solution #{}", i);
 
                 for (variable, value) in solution.iter() {
                     let value = if value { "T" } else { "F" };
                     println!("\t{}: {}", variable, value);
+                }
+
+                if i < solutions.len() - 1 {
+                    println!();
                 }
             }
         }
