@@ -28,8 +28,10 @@ impl Tableau {
     }
 
     pub fn append(&mut self, other: Self) {
+        self.expectations.append(&mut other.expectations.clone());
+
         if self.branches.is_empty() {
-            self.branches.push(other);
+            self.branches = other.branches;
 
             return;
         }
@@ -37,6 +39,17 @@ impl Tableau {
         for branch in self.branches.iter_mut() {
             branch.append(other.clone());
         }
+    }
+
+    pub fn width(&self) -> usize {
+        if self.branches.is_empty() {
+            return 1;
+        }
+
+        self.branches
+            .iter()
+            .map(|branch| branch.width())
+            .sum::<usize>()
     }
 }
 
@@ -98,7 +111,13 @@ impl TableauBuilder {
     }
 
     #[must_use]
-    pub fn build_conjunction(&self, lhs: &Expression, rhs: &Expression, expect: bool) -> Tableau {
+    pub fn build_conjunction(
+        &self,
+        expr: &Expression,
+        lhs: &Expression,
+        rhs: &Expression,
+        expect: bool,
+    ) -> Tableau {
         if expect == true {
             let mut lhs_tableau = self.build_expression(lhs, true);
             let rhs_tableau = self.build_expression(rhs, true);
@@ -106,10 +125,7 @@ impl TableauBuilder {
             lhs_tableau.append(rhs_tableau);
 
             Tableau {
-                expectations: vec![
-                    Expectation::new(lhs.clone(), true),
-                    Expectation::new(rhs.clone(), true),
-                ],
+                expectations: vec![Expectation::new(expr.clone(), true)],
                 branches: vec![lhs_tableau],
             }
         } else {
@@ -117,20 +133,26 @@ impl TableauBuilder {
             let rhs_tableau = self.build_expression(rhs, false);
 
             Tableau {
-                expectations: vec![],
+                expectations: vec![Expectation::new(expr.clone(), false)],
                 branches: vec![lhs_tableau, rhs_tableau],
             }
         }
     }
 
     #[must_use]
-    pub fn build_disjunction(&self, lhs: &Expression, rhs: &Expression, expect: bool) -> Tableau {
+    pub fn build_disjunction(
+        &self,
+        expr: &Expression,
+        lhs: &Expression,
+        rhs: &Expression,
+        expect: bool,
+    ) -> Tableau {
         if expect == true {
             let lhs_tableau = self.build_expression(lhs, true);
             let rhs_tableau = self.build_expression(rhs, true);
 
             Tableau {
-                expectations: vec![],
+                expectations: vec![Expectation::new(expr.clone(), true)],
                 branches: vec![lhs_tableau, rhs_tableau],
             }
         } else {
@@ -140,28 +162,37 @@ impl TableauBuilder {
             lhs_tableau.append(rhs_tableau);
 
             Tableau {
-                expectations: vec![
-                    Expectation::new(lhs.clone(), false),
-                    Expectation::new(rhs.clone(), false),
-                ],
+                expectations: vec![Expectation::new(expr.clone(), true)],
                 branches: vec![lhs_tableau],
             }
         }
     }
 
     #[must_use]
-    pub fn build_exclusive(&self, lhs: &Expression, rhs: &Expression, expect: bool) -> Tableau {
-        self.build_equivalence(lhs, rhs, !expect)
+    pub fn build_exclusive(
+        &self,
+        expr: &Expression,
+        lhs: &Expression,
+        rhs: &Expression,
+        expect: bool,
+    ) -> Tableau {
+        self.build_equivalence(expr, lhs, rhs, !expect)
     }
 
     #[must_use]
-    pub fn build_implication(&self, lhs: &Expression, rhs: &Expression, expect: bool) -> Tableau {
+    pub fn build_implication(
+        &self,
+        expr: &Expression,
+        lhs: &Expression,
+        rhs: &Expression,
+        expect: bool,
+    ) -> Tableau {
         if expect == true {
             let lhs_tableau = self.build_expression(lhs, false);
             let rhs_tableau = self.build_expression(rhs, true);
 
             Tableau {
-                expectations: vec![],
+                expectations: vec![Expectation::new(expr.clone(), true)],
                 branches: vec![lhs_tableau, rhs_tableau],
             }
         } else {
@@ -171,17 +202,20 @@ impl TableauBuilder {
             lhs_tableau.append(rhs_tableau);
 
             Tableau {
-                expectations: vec![
-                    Expectation::new(lhs.clone(), true),
-                    Expectation::new(rhs.clone(), false),
-                ],
+                expectations: vec![Expectation::new(expr.clone(), false)],
                 branches: vec![lhs_tableau],
             }
         }
     }
 
     #[must_use]
-    pub fn build_equivalence(&self, lhs: &Expression, rhs: &Expression, expect: bool) -> Tableau {
+    pub fn build_equivalence(
+        &self,
+        expr: &Expression,
+        lhs: &Expression,
+        rhs: &Expression,
+        expect: bool,
+    ) -> Tableau {
         if expect == true {
             let mut lhs_a = self.build_expression(lhs, true);
             let rhs_a = self.build_expression(rhs, true);
@@ -194,7 +228,7 @@ impl TableauBuilder {
             lhs_b.append(rhs_b);
 
             Tableau {
-                expectations: vec![],
+                expectations: vec![Expectation::new(expr.clone(), true)],
                 branches: vec![lhs_a, lhs_b],
             }
         } else {
@@ -209,7 +243,7 @@ impl TableauBuilder {
             lhs_b.append(rhs_b);
 
             Tableau {
-                expectations: vec![],
+                expectations: vec![Expectation::new(expr.clone(), false)],
                 branches: vec![lhs_a, lhs_b],
             }
         }
@@ -222,27 +256,22 @@ impl TableauBuilder {
         binary: &BinaryExpression,
         expect: bool,
     ) -> Tableau {
-        let tableau = match binary.operator {
+        match binary.operator {
             BinaryOperator::Conjunction(_) => {
-                self.build_conjunction(&binary.lhs, &binary.rhs, expect)
+                self.build_conjunction(expr, &binary.lhs, &binary.rhs, expect)
             }
             BinaryOperator::Disjunction(_) => {
-                self.build_disjunction(&binary.lhs, &binary.rhs, expect)
+                self.build_disjunction(expr, &binary.lhs, &binary.rhs, expect)
             }
             BinaryOperator::ExclusiveDisjunction(_) => {
-                self.build_exclusive(&binary.lhs, &binary.rhs, expect)
+                self.build_exclusive(expr, &binary.lhs, &binary.rhs, expect)
             }
             BinaryOperator::Implication(_) => {
-                self.build_implication(&binary.lhs, &binary.rhs, expect)
+                self.build_implication(expr, &binary.lhs, &binary.rhs, expect)
             }
             BinaryOperator::Equivalence(_) => {
-                self.build_equivalence(&binary.lhs, &binary.rhs, expect)
+                self.build_equivalence(expr, &binary.lhs, &binary.rhs, expect)
             }
-        };
-
-        Tableau {
-            expectations: vec![Expectation::new(expr.clone(), expect)],
-            branches: vec![tableau],
         }
     }
 
