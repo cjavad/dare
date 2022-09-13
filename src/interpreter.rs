@@ -67,6 +67,8 @@ impl Interpreter {
                 let rhs = self.interpret(&expression.rhs)?;
 
                 match expression.operator {
+                    // FIXME(javad): PLEASE FIX
+                    /*
                     BinaryOperator::Assignment(_) => {
                         if let ExpressionKind::Atomic(atomic) = expression.lhs.kind.as_ref() {
                             self.variables.insert(atomic.ident.clone(), rhs.value);
@@ -82,6 +84,7 @@ impl Interpreter {
                             Err(error)
                         }
                     }
+                    */
                     operator => {
                         let lhs = self.interpret(&expression.lhs)?;
 
@@ -107,7 +110,6 @@ impl Interpreter {
                                 value: lhs.value == rhs.value,
                                 span: expression.operator_span.clone(),
                             }),
-                            BinaryOperator::Assignment(_) => unreachable!(),
                         }
                     }
                 }

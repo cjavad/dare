@@ -59,9 +59,9 @@ impl<'a> Lexer<'a> {
             ('!', _) => TokenKind::UnaryOperator(UnaryOperator::Negation("!")),
             (':', Some('=')) => {
                 self.next();
-                TokenKind::BinaryOperator(BinaryOperator::Assignment(":="))
+                TokenKind::Assignment(":=")
             }
-            (':', _) => TokenKind::BinaryOperator(BinaryOperator::Assignment(":")),
+            (':', _) => TokenKind::Assignment(":"),
             ('&', Some('&')) => {
                 self.next();
                 TokenKind::BinaryOperator(BinaryOperator::Conjunction("&&"))
@@ -269,8 +269,8 @@ mod tests {
             TokenKind::Identifier(String::from("_0_a")),
             TokenKind::Delimiter(Delimiter::Open),
             TokenKind::Delimiter(Delimiter::Close),
-            TokenKind::BinaryOperator(BinaryOperator::Assignment(":=")),
-            TokenKind::BinaryOperator(BinaryOperator::Assignment(":")),
+            TokenKind::Assignment(":="),
+            TokenKind::Assignment(":"),
             TokenKind::UnaryOperator(UnaryOperator::Negation("¬")),
             TokenKind::UnaryOperator(UnaryOperator::Negation("~")),
             TokenKind::UnaryOperator(UnaryOperator::Negation("!")),
