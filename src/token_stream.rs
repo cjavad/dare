@@ -50,6 +50,8 @@ impl<'a> Lexer<'a> {
         let next = self.peek();
 
         Ok(match (ch, next) {
+            ('0', _) => TokenKind::TruthValue(false),
+            ('1', _) => TokenKind::TruthValue(true),
             ('(', _) => TokenKind::Delimiter(Delimiter::Open),
             (')', _) => TokenKind::Delimiter(Delimiter::Close),
             ('¬', _) => TokenKind::UnaryOperator(UnaryOperator::Negation("¬")),
@@ -116,10 +118,6 @@ impl<'a> Lexer<'a> {
         })
     }
 
-    fn is_truthvalue_or_identifier_first_char(ch: char) -> bool {
-        Self::is_identifier_first_char(ch) || matches!(ch, 'T' | 'F' | '1' | '0')
-    }
-
     fn is_identifier_first_char(ch: char) -> bool {
         ch.is_alphabetic() || ch == '_'
     }
@@ -129,33 +127,18 @@ impl<'a> Lexer<'a> {
     }
 
     fn is_identifier(&mut self) -> bool {
-        self.peek()
-            .map_or(false, Self::is_truthvalue_or_identifier_first_char)
+        self.peek().map_or(false, Self::is_identifier_first_char)
     }
 
     /// **Note** ``self.next()`` must be a valid starting character for an identifier.
-    fn parse_identifier(&mut self) -> Result<TokenKind, Error> {
+    fn parse_identifier(&mut self) -> String {
         let mut identifier = String::new();
 
         while self.peek().map_or(false, Self::is_identifier_char) {
             identifier.push(self.next().unwrap());
         }
 
-        if identifier.len() > 1
-            && !Self::is_identifier_first_char(identifier.chars().nth(0).unwrap())
-        {
-            Err(Error::new()
-                .with_msg(format!("invalid identifier '{}'", identifier))
-                .with_span(self.span()))
-        } else {
-            Ok(match identifier.as_str() {
-                "T" => TokenKind::TruthValue(true),
-                "F" => TokenKind::TruthValue(false),
-                "1" => TokenKind::TruthValue(true),
-                "0" => TokenKind::TruthValue(false),
-                _ => TokenKind::Identifier(identifier),
-            })
-        }
+        identifier
     }
 
     fn parse_token(&mut self) -> Result<Token, Error> {
@@ -163,9 +146,15 @@ impl<'a> Lexer<'a> {
 
         let start = self.span();
         if self.is_identifier() {
-            let identifier = self.parse_identifier().unwrap();
+            let identifier = self.parse_identifier();
 
-            return Ok(Token::new(identifier, start + self.span()));
+            let kind = match identifier.as_str() {
+                "F" => TokenKind::TruthValue(false),
+                "T" => TokenKind::TruthValue(true),
+                _ => TokenKind::Identifier(identifier),
+            };
+
+            return Ok(Token::new(kind, start + self.span()));
         }
 
         let symbol = self.parse_symbol()?;
