@@ -120,8 +120,16 @@ impl From<&Tableau> for Solutions {
         }
 
         for expectation in tableau.expectations.iter() {
-            if let ExpressionKind::Atomic(atomic) = expectation.expr.kind.as_ref() {
-                this.push(&atomic.ident, expectation.truth_value);
+            match expectation.expr.kind.as_ref() {
+                ExpressionKind::Atomic(atomic) => {
+                    this.push(&atomic.ident, expectation.truth_value);
+                }
+                ExpressionKind::TruthValue(truth_value) => {
+                    if truth_value.value != expectation.truth_value {
+                        this.solutions.clear();
+                    }
+                }
+                _ => {}
             }
         }
 
