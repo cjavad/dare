@@ -91,6 +91,29 @@ pub enum Shell {
     Zsh,
 }
 
+#[cfg(target_os = "linux")]
+impl std::fmt::Display for Shell {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Shell::Bash => write!(f, "bash"),
+            Shell::Elvish => write!(f, "elvish"),
+            Shell::Fish => write!(f, "fish"),
+            Shell::PowerShell => write!(f, "powershell"),
+            Shell::Zsh => write!(f, "zsh"),
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+impl std::fmt::Display for Shell {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Shell::PowerShell => write!(f, "powershell"),
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
 impl std::fmt::Display for Shell {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
