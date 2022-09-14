@@ -118,6 +118,8 @@ impl Shell {
 
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     pub fn install(&self) -> Result<(), io::Error> {
+        use std::io::Write;
+
         let target_dir = self.target_dir();
 
         fs::create_dir_all(&target_dir)?;
