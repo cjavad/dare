@@ -1,4 +1,8 @@
-use std::{io, str::FromStr};
+use std::{
+    io::{self, Read},
+    path::PathBuf,
+    str::FromStr,
+};
 
 use clap::{Parser, Subcommand};
 use clipboard::ClipboardProvider;
@@ -41,6 +45,10 @@ struct Tableau {
     #[clap(short, long)]
     clip_board: bool,
 
+    /// If this is used and source isn't supplied, the expression will be read path.
+    #[clap(short, long)]
+    path: Option<PathBuf>,
+
     /// The logical expression to evaluate.
     ///
     /// If not provided, the expression will be read from stdin.
@@ -52,6 +60,10 @@ struct Solve {
     /// Solve the given tableau when it evaluates to false.
     #[clap(short = 'f', long = "false")]
     expect_false: bool,
+
+    /// If this is used and source isn't supplied, the expression will be read path.
+    #[clap(short, long)]
+    path: Option<PathBuf>,
 
     /// The logical expression to evaluate.
     ///
@@ -73,13 +85,19 @@ struct Args {
     subcommand: SubCommand,
 }
 
-fn get_source(source: Option<String>) -> String {
+fn get_source(source: Option<String>, path: Option<PathBuf>) -> String {
     match source {
         Some(source) => source,
         None => {
-            let mut buffer = String::new();
-            io::stdin().read_line(&mut buffer).unwrap();
-            buffer
+            if let Some(path) = path {
+                std::fs::read_to_string(path).expect("Failed to read file")
+            } else {
+                let mut buffer = String::new();
+                io::stdin()
+                    .read_to_string(&mut buffer)
+                    .expect("Failed to read from stdin");
+                buffer
+            }
         }
     }
 }
@@ -88,13 +106,13 @@ fn main() {
     let args = Args::parse();
 
     match args.subcommand {
-        SubCommand::Tableau(print) => {
-            let source = get_source(print.source);
+        SubCommand::Tableau(command) => {
+            let source = get_source(command.source, command.path);
 
             // TODO: proper error reporting
-            let tableau = dare::Tableau::parse(&source, !print.expect_false).unwrap();
+            let tableau = dare::Tableau::parse(&source, !command.expect_false).unwrap();
 
-            let output = match print.format {
+            let output = match command.format {
                 OutputFormat::Latex => {
                     let mut latex = dare::LatexTableauWriter::default();
                     latex.write_tableau(&tableau).unwrap();
@@ -103,17 +121,17 @@ fn main() {
             };
 
             println!("{}", output);
-            if print.clip_board {
+            if command.clip_board {
                 ClipboardContext::new()
                     .unwrap()
                     .set_contents(output)
                     .unwrap();
             }
         }
-        SubCommand::Solve(solve) => {
-            let source = get_source(solve.source);
+        SubCommand::Solve(command) => {
+            let source = get_source(command.source, command.path);
 
-            let tableau = dare::Tableau::parse(&source, !solve.expect_false).unwrap();
+            let tableau = dare::Tableau::parse(&source, !command.expect_false).unwrap();
             let mut solutions = Solutions::from(&tableau);
             solutions.clean();
 
