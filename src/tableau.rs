@@ -1,6 +1,6 @@
 use crate::{
-    AtomicExpression, BinaryExpression, BinaryOperator, Expression, ExpressionKind,
-    ParenExpression, TruthValueExpression, UnaryExpression, UnaryOperator,
+    AtomicExpression, BinaryExpression, BinaryOperator, Error, Expression, ExpressionKind,
+    ParenExpression, Parser, TruthValueExpression, UnaryExpression, UnaryOperator,
 };
 
 #[derive(Clone, Debug)]
@@ -22,6 +22,12 @@ pub struct Tableau {
 }
 
 impl Tableau {
+    pub fn parse(source: &str, expect: bool) -> Result<Self, Error> {
+        let builder = TableauBuilder::default();
+        let parser = Parser::default();
+        Ok(builder.build_expression(&parser.parse(source)?, expect))
+    }
+
     pub fn merge(&mut self, mut other: Self) {
         self.expectations.append(&mut other.expectations);
         self.branches.append(&mut other.branches);
