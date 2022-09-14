@@ -38,7 +38,7 @@ impl Parser {
 
     pub fn parse_paren_expr(&self, tokens: &mut TokenStream) -> Result<ParenExpression, Error> {
         tokens.expect(&TokenKind::Delimiter(Delimiter::Open))?;
-        let expression = self.parse(tokens)?;
+        let expression = self.parse_expression(tokens)?;
         tokens.expect(&TokenKind::Delimiter(Delimiter::Close))?;
         Ok(ParenExpression { expression })
     }
@@ -103,7 +103,7 @@ impl Parser {
         }
     }
 
-    pub fn parse(&self, tokens: &mut TokenStream) -> Result<Expression, Error> {
+    pub fn parse_expression(&self, tokens: &mut TokenStream) -> Result<Expression, Error> {
         let start_span = tokens.span();
         let lhs = self.parse_unary_expr(tokens)?;
 
@@ -111,7 +111,7 @@ impl Parser {
             Some(TokenKind::BinaryOperator(operator)) => {
                 let operator = operator.clone();
                 let operator_span = tokens.next()?.span();
-                let rhs = self.parse(tokens)?;
+                let rhs = self.parse_expression(tokens)?;
                 let end_span = tokens.span();
 
                 if let ExpressionKind::Binary(rhs_expr) = rhs.kind.as_ref() {
@@ -160,6 +160,11 @@ impl Parser {
             _ => Ok(lhs),
         }
     }
+
+    pub fn parse(&self, source: impl AsRef<str>) -> Result<Expression, Error> {
+        let mut tokens = TokenStream::parse(source.as_ref())?;
+        self.parse_expression(&mut tokens)
+    }
 }
 
 #[cfg(test)]
@@ -172,8 +177,7 @@ mod tests {
 
         macro_rules! parser_tests {
             ($($source:literal),* $(,)?) => {$({
-                let mut tokens = TokenStream::parse($source).unwrap();
-                let expr = parser.parse(&mut tokens).unwrap();
+                let expr = parser.parse($source).unwrap();
                 assert_eq!(expr.to_string(), $source);
             })*};
         }

@@ -1,21 +1,17 @@
 [package]
-name = "dare"
+name = "dare-cli"
 version = "0.1.0"
 edition = "2021"
 authors = ["Dare Developers"]
 description = "Rust implementation of a tableau parser"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/cjavad/dare"
-readme = "README.md"
+readme = "../README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = ["dare-cli"]
-
-
 [dependencies]
-
-[features]
-default = ["latex"]
-latex = []
+clap = { version = "3.2", features = ["derive"] }
+clipboard = "0.5"
+clipboard-ext = "0.2"
+dare = { path = "..", version = "0.1.0" }
