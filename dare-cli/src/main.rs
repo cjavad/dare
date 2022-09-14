@@ -63,6 +63,7 @@ struct Solve {
 enum SubCommand {
     /// Print the tableau for a given logical expression.
     Tableau(Tableau),
+    /// Print the solutions for a given logical expression.
     Solve(Solve),
 }
 
