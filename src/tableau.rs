@@ -33,8 +33,8 @@ impl Tableau {
         self.branches.append(&mut other.branches);
     }
 
-    pub fn append(&mut self, other: Self) {
-        self.expectations.append(&mut other.expectations.clone());
+    pub fn append(&mut self, mut other: Self) {
+        self.expectations.append(&mut other.expectations);
 
         if self.branches.is_empty() {
             self.branches = other.branches;
