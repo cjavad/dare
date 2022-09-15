@@ -114,7 +114,7 @@ impl From<&Tableau> for Solutions {
         }
 
         for branch in tableau.branches.iter() {
-            let mut solutions = Self::from(branch);
+            let mut solutions = Self::from(&branch.tableau);
 
             this.solutions.append(&mut solutions.solutions);
         }

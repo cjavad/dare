@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use crate::{
     AtomicExpression, BinaryExpression, BinaryOperator, Error, Expression, ExpressionKind,
     ParenExpression, Parser, TruthValueExpression, UnaryExpression, UnaryOperator,
@@ -7,25 +9,67 @@ use crate::{
 pub struct Expectation {
     pub expr: Expression,
     pub truth_value: bool,
+    pub id: u32,
 }
 
 impl Expectation {
-    pub const fn new(expr: Expression, truth_value: bool) -> Self {
-        Self { expr, truth_value }
+    pub const fn new(expr: Expression, truth_value: bool, id: u32) -> Self {
+        Self {
+            expr,
+            truth_value,
+            id,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct TableauBranch {
+    pub tableau: Tableau,
+    pub expectation: u32,
+}
+
+impl TableauBranch {
+    pub fn new(tableau: Tableau, expectation: u32) -> Self {
+        Self {
+            tableau,
+            expectation,
+        }
+    }
+}
+
+impl Deref for TableauBranch {
+    type Target = Tableau;
+
+    fn deref(&self) -> &Self::Target {
+        &self.tableau
+    }
+}
+
+impl DerefMut for TableauBranch {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.tableau
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct Tableau {
     pub expectations: Vec<Expectation>,
-    pub branches: Vec<Tableau>,
+    pub branches: Vec<TableauBranch>,
 }
 
 impl Tableau {
     pub fn parse(source: &str, expect: bool) -> Result<Self, Error> {
-        let builder = TableauBuilder::default();
+        let mut builder = TableauBuilder::default();
         let parser = Parser::default();
         Ok(builder.build_expression(&parser.parse(source)?, expect))
+    }
+
+    pub fn has_expectation(&self, id: u32) -> bool {
+        self.expectations.iter().any(|e| e.id == id)
+    }
+
+    pub fn solves_expectation(&self, id: u32) -> bool {
+        self.branches.iter().any(|b| b.expectation == id)
     }
 
     pub fn merge(&mut self, mut other: Self) {
@@ -33,17 +77,17 @@ impl Tableau {
         self.branches.append(&mut other.branches);
     }
 
-    pub fn append(&mut self, mut other: Self) {
-        self.expectations.append(&mut other.expectations);
+    pub fn append(&mut self, mut other: TableauBranch) {
+        self.expectations.append(&mut other.tableau.expectations);
 
         if self.branches.is_empty() {
-            self.branches = other.branches;
+            self.branches = other.tableau.branches;
 
             return;
         }
 
         for branch in self.branches.iter_mut() {
-            branch.append(other.clone());
+            branch.tableau.append(other.clone());
         }
     }
 
@@ -60,38 +104,46 @@ impl Tableau {
 }
 
 #[derive(Default)]
-pub struct TableauBuilder {}
+pub struct TableauBuilder {
+    id: u32,
+}
 
 impl TableauBuilder {
+    pub fn next_id(&mut self) -> u32 {
+        let id = self.id;
+        self.id += 1;
+        id
+    }
+
     #[must_use]
     pub fn build_truth_value(
-        &self,
+        &mut self,
         expr: &Expression,
         _truth_value: &TruthValueExpression,
         expect: bool,
     ) -> Tableau {
         Tableau {
-            expectations: vec![Expectation::new(expr.clone(), expect)],
+            expectations: vec![Expectation::new(expr.clone(), expect, self.next_id())],
             branches: Vec::new(),
         }
     }
 
     #[must_use]
     pub fn build_atomic(
-        &self,
+        &mut self,
         expr: &Expression,
         _atomic: &AtomicExpression,
         expect: bool,
     ) -> Tableau {
         Tableau {
-            expectations: vec![Expectation::new(expr.clone(), expect)],
+            expectations: vec![Expectation::new(expr.clone(), expect, self.next_id())],
             branches: Vec::new(),
         }
     }
 
     #[must_use]
     pub fn build_paren(
-        &self,
+        &mut self,
         _expr: &Expression,
         paren: &ParenExpression,
         expect: bool,
@@ -100,83 +152,100 @@ impl TableauBuilder {
     }
 
     #[must_use]
-    pub fn build_negation(&self, operand: &Expression, expect: bool) -> Tableau {
+    pub fn build_negation(&mut self, operand: &Expression, expect: bool) -> Tableau {
         self.build_expression(&operand, !expect)
     }
 
     #[must_use]
-    pub fn build_unary(&self, expr: &Expression, unary: &UnaryExpression, expect: bool) -> Tableau {
+    pub fn build_unary(
+        &mut self,
+        expr: &Expression,
+        unary: &UnaryExpression,
+        expect: bool,
+    ) -> Tableau {
+        let id = self.next_id();
+
         let tableau = match unary.operator {
             UnaryOperator::Negation(_) => self.build_expression(&unary.operand, !expect),
         };
 
         Tableau {
-            expectations: vec![Expectation::new(expr.clone(), expect)],
-            branches: vec![tableau],
+            expectations: vec![Expectation::new(expr.clone(), expect, id)],
+            branches: vec![TableauBranch::new(tableau, id)],
         }
     }
 
     #[must_use]
     pub fn build_conjunction(
-        &self,
+        &mut self,
         expr: &Expression,
         lhs: &Expression,
         rhs: &Expression,
         expect: bool,
     ) -> Tableau {
+        let id = self.next_id();
+
         if expect == true {
             let mut lhs_tableau = self.build_expression(lhs, true);
             let rhs_tableau = self.build_expression(rhs, true);
 
-            lhs_tableau.append(rhs_tableau);
+            lhs_tableau.append(TableauBranch::new(rhs_tableau, id));
 
             Tableau {
-                expectations: vec![Expectation::new(expr.clone(), true)],
-                branches: vec![lhs_tableau],
+                expectations: vec![Expectation::new(expr.clone(), true, id)],
+                branches: vec![TableauBranch::new(lhs_tableau, id)],
             }
         } else {
             let lhs_tableau = self.build_expression(lhs, false);
             let rhs_tableau = self.build_expression(rhs, false);
 
             Tableau {
-                expectations: vec![Expectation::new(expr.clone(), false)],
-                branches: vec![lhs_tableau, rhs_tableau],
+                expectations: vec![Expectation::new(expr.clone(), false, id)],
+                branches: vec![
+                    TableauBranch::new(lhs_tableau, id),
+                    TableauBranch::new(rhs_tableau, id),
+                ],
             }
         }
     }
 
     #[must_use]
     pub fn build_disjunction(
-        &self,
+        &mut self,
         expr: &Expression,
         lhs: &Expression,
         rhs: &Expression,
         expect: bool,
     ) -> Tableau {
+        let id = self.next_id();
+
         if expect == true {
             let lhs_tableau = self.build_expression(lhs, true);
             let rhs_tableau = self.build_expression(rhs, true);
 
             Tableau {
-                expectations: vec![Expectation::new(expr.clone(), true)],
-                branches: vec![lhs_tableau, rhs_tableau],
+                expectations: vec![Expectation::new(expr.clone(), true, id)],
+                branches: vec![
+                    TableauBranch::new(lhs_tableau, id),
+                    TableauBranch::new(rhs_tableau, id),
+                ],
             }
         } else {
             let mut lhs_tableau = self.build_expression(lhs, false);
             let rhs_tableau = self.build_expression(rhs, false);
 
-            lhs_tableau.append(rhs_tableau);
+            lhs_tableau.append(TableauBranch::new(rhs_tableau, id));
 
             Tableau {
-                expectations: vec![Expectation::new(expr.clone(), true)],
-                branches: vec![lhs_tableau],
+                expectations: vec![Expectation::new(expr.clone(), true, id)],
+                branches: vec![TableauBranch::new(lhs_tableau, id)],
             }
         }
     }
 
     #[must_use]
     pub fn build_exclusive(
-        &self,
+        &mut self,
         expr: &Expression,
         lhs: &Expression,
         rhs: &Expression,
@@ -187,77 +256,84 @@ impl TableauBuilder {
 
     #[must_use]
     pub fn build_implication(
-        &self,
+        &mut self,
         expr: &Expression,
         lhs: &Expression,
         rhs: &Expression,
         expect: bool,
     ) -> Tableau {
+        let id = self.next_id();
+
         if expect == true {
             let lhs_tableau = self.build_expression(lhs, false);
             let rhs_tableau = self.build_expression(rhs, true);
 
             Tableau {
-                expectations: vec![Expectation::new(expr.clone(), true)],
-                branches: vec![lhs_tableau, rhs_tableau],
+                expectations: vec![Expectation::new(expr.clone(), true, id)],
+                branches: vec![
+                    TableauBranch::new(lhs_tableau, id),
+                    TableauBranch::new(rhs_tableau, id),
+                ],
             }
         } else {
             let mut lhs_tableau = self.build_expression(lhs, true);
             let rhs_tableau = self.build_expression(rhs, false);
 
-            lhs_tableau.append(rhs_tableau);
+            lhs_tableau.append(TableauBranch::new(rhs_tableau, id));
 
             Tableau {
-                expectations: vec![Expectation::new(expr.clone(), false)],
-                branches: vec![lhs_tableau],
+                expectations: vec![Expectation::new(expr.clone(), false, id)],
+                branches: vec![TableauBranch::new(lhs_tableau, id)],
             }
         }
     }
 
     #[must_use]
     pub fn build_equivalence(
-        &self,
+        &mut self,
         expr: &Expression,
         lhs: &Expression,
         rhs: &Expression,
         expect: bool,
     ) -> Tableau {
+        let id = self.next_id();
+
         if expect == true {
             let mut lhs_a = self.build_expression(lhs, true);
             let rhs_a = self.build_expression(rhs, true);
 
-            lhs_a.append(rhs_a);
+            lhs_a.append(TableauBranch::new(rhs_a, id));
 
             let mut lhs_b = self.build_expression(lhs, false);
             let rhs_b = self.build_expression(rhs, false);
 
-            lhs_b.append(rhs_b);
+            lhs_b.append(TableauBranch::new(rhs_b, id));
 
             Tableau {
-                expectations: vec![Expectation::new(expr.clone(), true)],
-                branches: vec![lhs_a, lhs_b],
+                expectations: vec![Expectation::new(expr.clone(), true, id)],
+                branches: vec![TableauBranch::new(lhs_a, id), TableauBranch::new(lhs_b, id)],
             }
         } else {
             let mut lhs_a = self.build_expression(lhs, true);
             let rhs_a = self.build_expression(rhs, false);
 
-            lhs_a.append(rhs_a);
+            lhs_a.append(TableauBranch::new(rhs_a, id));
 
             let mut lhs_b = self.build_expression(lhs, false);
             let rhs_b = self.build_expression(rhs, true);
 
-            lhs_b.append(rhs_b);
+            lhs_b.append(TableauBranch::new(rhs_b, id));
 
             Tableau {
-                expectations: vec![Expectation::new(expr.clone(), false)],
-                branches: vec![lhs_a, lhs_b],
+                expectations: vec![Expectation::new(expr.clone(), false, id)],
+                branches: vec![TableauBranch::new(lhs_a, id), TableauBranch::new(lhs_b, id)],
             }
         }
     }
 
     #[must_use]
     pub fn build_binary(
-        &self,
+        &mut self,
         expr: &Expression,
         binary: &BinaryExpression,
         expect: bool,
@@ -282,7 +358,7 @@ impl TableauBuilder {
     }
 
     #[must_use]
-    pub fn build_expression(&self, expr: &Expression, expect: bool) -> Tableau {
+    pub fn build_expression(&mut self, expr: &Expression, expect: bool) -> Tableau {
         match expr.kind.as_ref() {
             ExpressionKind::TruthValue(value) => self.build_truth_value(expr, value, expect),
             ExpressionKind::Atomic(atomic) => self.build_atomic(expr, atomic, expect),
