@@ -95,3 +95,13 @@ impl std::fmt::Display for Expression {
         }
     }
 }
+
+impl Expression {
+    pub fn terminates(&self) -> bool {
+        match self.kind.as_ref() {
+            ExpressionKind::TruthValue(_) => true,
+            ExpressionKind::Atomic(_) => true,
+            _ => false,
+        }
+    }
+}
