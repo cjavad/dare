@@ -99,9 +99,12 @@ impl LatexTableauWriter {
 
         height += tableau.expectations.len() as f32 * 10.0;
 
+        let mut max_height = 0.0f32;
         for branch in &tableau.branches {
-            height += Self::tableau_height(branch);
+            max_height = max_height.max(Self::tableau_height(branch) + 20.0);
         }
+
+        height += max_height;
 
         height
     }
