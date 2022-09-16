@@ -1,4 +1,10 @@
-use std::{collections::HashMap, sync::{atomic::{AtomicU32, Ordering}, RwLock, Arc}};
+use std::{
+    collections::HashMap,
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Arc, RwLock,
+    },
+};
 
 use crate::{
     AtomicExpression, BinaryExpression, BinaryOperator, Error, Expression, ExpressionKind,
@@ -80,7 +86,6 @@ impl ExpressionWriter for LatexExpressionWriter {
         Ok(())
     }
 }
-
 
 #[derive(Debug)]
 struct IdMapInner {
@@ -213,7 +218,9 @@ impl TableauWriter for LatexTableauWriter {
             self.buffer += &left;
 
             let terminates = expectation.expr.terminates();
-            let right = if !tableau.solves_expectation(expectation.id) && !terminates || self.show_all_ids {
+            let right = if !tableau.solves_expectation(expectation.id) && !terminates
+                || self.show_all_ids
+            {
                 let id = format!(
                     "\\pdfliteral{{1, 0, 0, rg}} {} \\pdfliteral{{0, 0, 0, rg}}",
                     self.get_id(expectation.id),
@@ -274,7 +281,9 @@ impl TableauWriter for LatexTableauWriter {
                 writer.y + 8.0 + self.height,
             );
 
-            if (!tableau.has_expectation(branch.expectation) || self.show_all_ids) && i == tableau.branches.len() - 1 {
+            if (!tableau.has_expectation(branch.expectation) || self.show_all_ids)
+                && i == tableau.branches.len() - 1
+            {
                 let id_y = if tableau.branches.len() == 1 {
                     mid_y
                 } else {
