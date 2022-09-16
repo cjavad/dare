@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::{atomic::{AtomicU32, Ordering}, RwLock, Arc}};
 
 use crate::{
     AtomicExpression, BinaryExpression, BinaryOperator, Error, Expression, ExpressionKind,
@@ -81,6 +81,42 @@ impl ExpressionWriter for LatexExpressionWriter {
     }
 }
 
+
+#[derive(Debug)]
+struct IdMapInner {
+    next_id: AtomicU32,
+    id_map: RwLock<HashMap<u32, u32>>,
+}
+
+impl Default for IdMapInner {
+    fn default() -> Self {
+        Self {
+            next_id: AtomicU32::new(1),
+            id_map: RwLock::new(HashMap::new()),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+struct SharedIdMap {
+    inner: Arc<IdMapInner>,
+}
+
+impl SharedIdMap {
+    pub fn get_id(&self, id: u32) -> u32 {
+        let mut id_map = self.inner.id_map.write().unwrap();
+
+        if let Some(&new_id) = id_map.get(&id) {
+            return new_id;
+        }
+
+        let new_id = self.inner.next_id.fetch_add(1, Ordering::Relaxed);
+        id_map.insert(id, new_id);
+
+        new_id
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct LatexTableauWriter {
     x: f32,
@@ -90,8 +126,8 @@ pub struct LatexTableauWriter {
     width: f32,
     height: f32,
     has_dimensions: bool,
-    next_id: u32,
-    id_map: HashMap<u32, u32>,
+    show_all_ids: bool,
+    id_map: SharedIdMap,
     buffer: String,
 }
 
@@ -104,8 +140,8 @@ impl Default for LatexTableauWriter {
             branch_height: 30.0,
             width: 0.0,
             height: 0.0,
-            next_id: 1,
-            id_map: HashMap::new(),
+            show_all_ids: false,
+            id_map: SharedIdMap::default(),
             has_dimensions: false,
             buffer: String::new(),
         }
@@ -132,16 +168,12 @@ impl LatexTableauWriter {
         height
     }
 
+    pub fn show_all_ids(&mut self) {
+        self.show_all_ids = true;
+    }
+
     pub fn get_id(&mut self, id: u32) -> u32 {
-        match self.id_map.get(&id) {
-            Some(mapped_id) => *mapped_id,
-            None => {
-                let mapped_id = self.next_id;
-                self.next_id += 1;
-                self.id_map.insert(id, mapped_id);
-                mapped_id
-            }
-        }
+        self.id_map.get_id(id)
     }
 
     pub fn finalize(self) -> String {
@@ -181,9 +213,9 @@ impl TableauWriter for LatexTableauWriter {
             self.buffer += &left;
 
             let terminates = expectation.expr.terminates();
-            let right = if !tableau.solves_expectation(expectation.id) && !terminates {
+            let right = if !tableau.solves_expectation(expectation.id) && !terminates || self.show_all_ids {
                 let id = format!(
-                    "\\pdfliteral{{0.9, 0.37, 0.74, rg}} {} \\pdfliteral{{0, 0, 0, rg}}",
+                    "\\pdfliteral{{1, 0, 0, rg}} {} \\pdfliteral{{0, 0, 0, rg}}",
                     self.get_id(expectation.id),
                 );
 
@@ -226,7 +258,7 @@ impl TableauWriter for LatexTableauWriter {
             writer.has_dimensions = true;
             writer.x = self.x + calculated_width * width_mod;
             writer.y = self.y - self.branch_height;
-            writer.next_id = self.next_id;
+            writer.show_all_ids = self.show_all_ids;
             writer.id_map = self.id_map.clone();
 
             let mid_x = (writer.x + self.x) / 2.0 + self.width / 2.0;
@@ -242,7 +274,7 @@ impl TableauWriter for LatexTableauWriter {
                 writer.y + 8.0 + self.height,
             );
 
-            if !tableau.has_expectation(branch.expectation) && i == tableau.branches.len() - 1 {
+            if (!tableau.has_expectation(branch.expectation) || self.show_all_ids) && i == tableau.branches.len() - 1 {
                 let id_y = if tableau.branches.len() == 1 {
                     mid_y
                 } else {
