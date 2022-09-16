@@ -220,6 +220,11 @@ fn main() {
             let output = match command.format {
                 OutputFormat::Latex => {
                     let mut latex = dare::LatexTableauWriter::default();
+
+                    if command.show_all_ids {
+                        latex.show_all_ids();
+                    }
+
                     latex.write_tableau(&tableau).unwrap();
                     latex.finalize()
                 }

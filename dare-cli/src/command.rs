@@ -17,6 +17,10 @@ pub struct Tableau {
     #[clap(short = 'f', long = "false")]
     pub expect_false: bool,
 
+    /// Show the id of each branch and expression.
+    #[clap(short, long)]
+    pub show_all_ids: bool,
+
     /// Copy the output to the clipboard.
     #[clap(short, long)]
     pub clip_board: bool,
